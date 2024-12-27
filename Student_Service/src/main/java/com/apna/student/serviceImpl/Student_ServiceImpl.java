@@ -6,7 +6,9 @@ import java.util.Optional;
 
 import javax.management.RuntimeErrorException;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +23,8 @@ public class Student_ServiceImpl implements Student_Service{
 
 	@Autowired
 	private Student_Repository repository;
+	@Autowired
+	KafkaTemplate<String,String> kt;
 	
 	@Override
 	public Student add(String json, MultipartFile photo) {
@@ -30,6 +34,7 @@ public class Student_ServiceImpl implements Student_Service{
 		
 		try {
 			st=om.readValue(json, Student.class);
+			//kt.send("batch177",json);
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -57,6 +62,13 @@ public class Student_ServiceImpl implements Student_Service{
 	@Override
 	public List<Student> getAllStu() {
 	    List<Student> list = repository.findAll();
+	    for(Student st : list)
+	    {
+	    	String studetails="{\"id\": \""+st.getId()+ "\" , \"name\": \""+st.getName()+"\"}";
+			kt.send("stu", studetails);
+			System.out.println(studetails);
+	    }
+	    
 		return list;
 	}
 
